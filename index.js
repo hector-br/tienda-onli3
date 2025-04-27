@@ -154,14 +154,26 @@ function verImagenGrande(elemento) {
 }
 
 //Esta funcion permite cerrar la ventana de la vista grande del producto
-function cerarVistaGrande(event) {
+function cerrarVistaGrande(event) {
+    try {
+        const vistaGrandeProducto = document.getElementById("vista-grande");
 
-    if (event.target === document.getElementById("vista-grande")) {
-        var vistaGrandeProducto = document.getElementById("vista-grande");
-        vistaGrandeProducto.style.display = "none";
+        // Comprobar si el elemento existe antes de proceder
+        if (!vistaGrandeProducto) {
+            console.error("No se encontró el contenedor de la vista grande.");
+            return; // Salimos si no existe el elemento
+        }
+
+        // Si el clic fue en el contenedor principal (y no en un elemento interno)
+        if (event.target === vistaGrandeProducto) {
+            vistaGrandeProducto.style.display = "none";
+        }
+    } catch (error) {
+        // Capturamos cualquier error que ocurra dentro de la función
+        console.error("Error al intentar cerrar la vista grande:", error);
     }
 }
-
+// document.getElementById("vista-grande").addEventListener("click", cerrarVistaGrande);
 //Funcion que agrega los productos al carrito de compras 
 function agregarAlCarrito() {
 
@@ -171,9 +183,16 @@ function agregarAlCarrito() {
         return;
     }
 
+
     var imagen = document.getElementById("imagen").src;
     var nombreProducto = document.getElementById("descripcion-producto").textContent;
     var precioProducto = parseFloat(document.getElementById("precio-producto").textContent.replace('Precio: $', '').trim());
+
+
+    if (typeof carrito === "undefined"){
+        console.error("EL carrito aun no esta inicailizado");
+        return ;
+    }
 
     carrito.push({ nombre: nombreProducto, imagen, precio: precioProducto, talla: tallaSeleccionada });
 
