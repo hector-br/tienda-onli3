@@ -55,23 +55,49 @@ const productos = [
 // Función para mostrar los productos en el contenedor principal de los productos
 function mostrarProductos(productos) {
 
-    const contenedorProductos = document.getElementById('productos-container');
-    contenedorProductos.innerHTML = '';
+    try {
+        const contenedorProductos = document.getElementById('productos-container');
+        if(!contenedorProductos){
+            console.error("no se encontro el contenedor productos");
+            return; //Detiene la ejecucion 
+        }
 
-    productos.forEach(producto => {
-        const divProducto = document.createElement('div');
-        divProducto.classList.add('producto');
-        divProducto.innerHTML = `
-            <img src="${producto.imagen}" alt="${producto.nombre}" class="imagen" onclick="verImagenGrande(this)" 
-                 data-img="${producto.imagen}" 
-                 data-description="${producto.descripcion}" 
-                 data-price="${producto.precio}" 
-                 data-size="${producto.talla}">
-            <p>${producto.descripcion}</p>
-            <p>$${producto.precio}</p>
-        `;
-        contenedorProductos.appendChild(divProducto);
-    });
+        //Se verifica que productos sea un array
+        if(!Array.isArray(productos)){
+            console.error("Prodcutos no es un array")
+            return; 
+        }
+        contenedorProductos.innerHTML = '';
+
+        productos.forEach(producto => {
+            try {
+                //Se valida los datos del producto antes de procesarlos
+                if(!producto || !producto.imagen || !producto.nombre || !producto.precio) {
+                    console.warn("Producto incompleto");
+                    return;
+                }
+
+                const divProducto = document.createElement('div');
+                divProducto.classList.add('producto');
+
+                divProducto.innerHTML = `
+                    <img src="${producto.imagen}" alt="${producto.nombre}" class="imagen" onclick="verImagenGrande(this)" 
+                        data-img="${producto.imagen}" 
+                        data-description="${producto.descripcion}" 
+                        data-price="${producto.precio}" 
+                        data-size="${producto.talla}">
+                    <p>${producto.descripcion}</p>
+                    <p>$${producto.precio}</p>
+                `;
+                contenedorProductos.appendChild(divProducto);
+
+            } catch (error) {
+                console.error("Error en los productos", error);
+            }
+        });
+    } catch (error) {
+        console.error("Error al mostrar productos", error);
+    }
 }
 
 // Llamar a la función para mostrar los productos al cargar la página
@@ -79,34 +105,52 @@ mostrarProductos(productos);
 
 //Funcion para mostrar una vista mas grande con la informacion del producto
 function verImagenGrande(elemento) {
+    try {
+        var vistaGrandeProducto = document.getElementById("vista-grande");
+        if(!vistaGrandeProducto) {
+            console.error("No se encontro el contenedor vista grande");
+            return;
+        }
+        var imagenGrande = document.getElementById("imagen");
+        if (!imagenGrande) {
+            console.error("No se encontro el contenedor de la imagen grande");
+            return;
+        }
+        var descripcion = document.getElementById("descripcion-producto");
+        if (!descripcion) {
+            console.error("No se encontro el contenedor para la descripcion del producto");
+            return;
+        }
+        var precio = document.getElementById("precio-producto");
+        var talla = document.getElementById("talla-modal");
+        var tallasSelect = document.getElementById("tallas-producto");
+    
+        var imgUrl = elemento.getAttribute("data-img");
+        var desc = elemento.getAttribute("data-description");
+        var precioValue = elemento.getAttribute("data-price");
+        var tallasValue = elemento.getAttribute("data-size").split(", ");
+        
+       
 
-    var vistaGrandeProducto = document.getElementById("vista-grande");
-    var imagenGrande = document.getElementById("imagen");
-    var descripcion = document.getElementById("descripcion-producto");
-    var precio = document.getElementById("precio-producto");
-    var talla = document.getElementById("talla-modal");
-    var tallasSelect = document.getElementById("tallas-producto");
-
-    var imgUrl = elemento.getAttribute("data-img");
-    var desc = elemento.getAttribute("data-description");
-    var precioValue = elemento.getAttribute("data-price");
-    var tallasValue = elemento.getAttribute("data-size").split(", ");
-
-    imagenGrande.src = imgUrl;
-    descripcion.innerHTML = desc;
-    precio.innerHTML = "Precio: $" + precioValue;
-    talla.innerHTML = "Tallas disponibles: ";
-
-    tallasSelect.innerHTML = "<option value=''>Seleccionar talla</option>";
-
-    tallasValue.forEach(function(talla) {
-        var option = document.createElement("option");
-        option.value = talla;
-        option.textContent = talla;
-        tallasSelect.appendChild(option);
-    });
-
-    vistaGrandeProducto.style.display = "block";
+        imagenGrande.src = imgUrl;
+        descripcion.innerHTML = desc;
+        precio.innerHTML = "Precio: $" + precioValue;
+        talla.innerHTML = "Tallas disponibles: ";
+    
+        tallasSelect.innerHTML = "<option value=''>Seleccionar talla</option>";
+    
+        tallasValue.forEach(function(talla) {
+            var option = document.createElement("option");
+            option.value = talla;
+            option.textContent = talla;
+            tallasSelect.appendChild(option);
+        });
+    
+        vistaGrandeProducto.style.display = "block";
+    } catch (error) {
+        console.error("Error al ver la vista grande", error);
+    }
+    
 }
 
 //Esta funcion permite cerrar la ventana de la vista grande del producto
