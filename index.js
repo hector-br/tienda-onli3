@@ -4,7 +4,7 @@ let total = 0;
 
 // Arreglo de productos
 const productos = [
-    { nombre: 'Camisa', descripcion: 'Camisa manga larga', precio: 259.99, imagen: 'imagenes/camisa.jpg', talla: 'S, M, L, XL' },
+    { nombre: 'Camisa', descripcion: 'Camisa manga larga', precio: "hola", imagen: 'imagenes/camisa.jpg', talla: 'S, M, L, XL' },
     { nombre: 'Camisa', descripcion: 'Camisa de alta calidad', precio: 159.9, imagen: 'imagenes/camisa2.jpg', talla: 'S, M, L, XL' },
     { nombre: 'Camisa', descripcion: 'Camisa de alta calidad', precio: 150.0, imagen: 'imagenes/camisa3.jpg', talla: 'S, M, L, XL' },
     { nombre: 'Camisa', descripcion: 'Camisa azul', precio: 170.45, imagen: 'imagenes/camisa4.jpg', talla: 'S, M, L, XL' },
@@ -175,52 +175,78 @@ function cerrarVistaGrande(event) {
 }
 // document.getElementById("vista-grande").addEventListener("click", cerrarVistaGrande);
 //Funcion que agrega los productos al carrito de compras 
+function vistaGrande(event) {
+    console.log(event.target); // aquí se usaría el target recibido
+}
 function agregarAlCarrito() {
+    try {
+        const tallaSeleccionada = document.getElementById("tallas-producto").value;
+        if (!tallaSeleccionada) {
+            alert("Por favor, selecciona una talla antes de agregar al carrito.");
+            return;
+        }
 
-    var tallaSeleccionada = document.getElementById("tallas-producto").value;
-    if (!tallaSeleccionada) {
-        alert("Por favor, selecciona una talla antes de agregar al carrito.");
-        return;
+
+        var imagen = document.getElementById("imagen").src;
+        var nombreProducto = document.getElementById("descripcion-producto").textContent;
+        var precioProducto = parseFloat(document.getElementById("precio-producto").textContent.replace('Precio: $', '').trim());
+
+
+        if (typeof carrito === "undefined"){
+            console.error("EL carrito aun no esta inicailizado", error);
+            return ;
+        }
+
+        carrito.push({ nombre: nombreProducto, imagen, precio: precioProducto, talla: tallaSeleccionada });
+
+        alert("Producto añadido al carrito: " + nombreProducto + " - Talla " + tallaSeleccionada);
+        actualizarCarrito();
+        vistaGrande({target: document.getElementById("vista-grande")});
+
+    }catch(error){
+        console.error("Error: No se pudo agregar al carrito", error);
     }
-
-
-    var imagen = document.getElementById("imagen").src;
-    var nombreProducto = document.getElementById("descripcion-producto").textContent;
-    var precioProducto = parseFloat(document.getElementById("precio-producto").textContent.replace('Precio: $', '').trim());
-
-
-    if (typeof carrito === "undefined"){
-        console.error("EL carrito aun no esta inicailizado");
-        return ;
-    }
-
-    carrito.push({ nombre: nombreProducto, imagen, precio: precioProducto, talla: tallaSeleccionada });
-
-    alert("Producto añadido al carrito: " + nombreProducto + " - Talla " + tallaSeleccionada);
-    actualizarCarrito();
-    vistaGrande({target: document.getElementById("vista-grande")});
 }
 
 //Funcion que actualiza los productos en el carrito con el total de la compra
 function actualizarCarrito() {
-    const carritoLista = document.getElementById("carrito-lista");
-    const totalElement = document.getElementById("total");
+    try {    
+        const carritoLista = document.getElementById("carrito-lista");
+        const totalElement = document.getElementById("total");
+        // Verificar si se encuentran los contenedores que se vana a usar
+        if (!carritoLista || !totalElement){
+            console.error("Error: No se encontro el contenedor carrito o total")
+            return;
+        }
+   
 
-    carritoLista.innerHTML = "";
-    carrito.forEach((producto, index) => {
-        const li = document.createElement("li");
-        li.textContent = `${producto.nombre} - Talla: ${producto.talla} - $${producto.precio}`;
-        
-        const eliminarButton = document.createElement("button");
-        eliminarButton.textContent = "Quitar";
-        eliminarButton.onclick = () => eliminarProducto(index);
+        carritoLista.innerHTML = "";
+        carrito.forEach((producto, index) => {
+            console.log("precio del producto seleccionado");
+            console.log(producto.precio);
 
-        li.appendChild(eliminarButton);
-        carritoLista.appendChild(li);
-    });
+            if (!producto || typeof producto.precio !== "number"){
+                console.warn(`Producto invalido en el index ${index}:`, producto);
+                return;
+            }    
 
-    total = carrito.reduce((sum, producto) => sum + producto.precio, 0);
-    totalElement.textContent = total.toFixed(2);
+            const li = document.createElement("li");
+            li.textContent = `${producto.nombre} - Talla: ${producto.talla} - $${producto.precio}`;
+            
+            const eliminarButton = document.createElement("button");
+            eliminarButton.textContent = "Quitar";
+            eliminarButton.onclick = () => eliminarProducto(index);
+
+            li.appendChild(eliminarButton);
+            carritoLista.appendChild(li);
+        });
+
+        total = carrito.reduce((sum, producto) => sum + producto.precio, 0);
+        totalElement.textContent = total.toFixed(2);
+
+    } catch (error){
+        console.error("Error: Error al actualizar el carrito de compras");
+    }
 }
 
 function eliminarProducto(index) {
