@@ -4,7 +4,7 @@ let total = 0;
 
 // Arreglo de productos
 const productos = [
-    { nombre: 'Camisa', descripcion: 'Camisa manga larga', precio: "hola", imagen: 'imagenes/camisa.jpg', talla: 'S, M, L, XL' },
+    { nombre: 'Camisa', descripcion: 'Camisa manga larga', precio: 255.50, imagen: 'imagenes/camisa.jpg', talla: 'S, M, L, XL' },
     { nombre: 'Camisa', descripcion: 'Camisa de alta calidad', precio: 159.9, imagen: 'imagenes/camisa2.jpg', talla: 'S, M, L, XL' },
     { nombre: 'Camisa', descripcion: 'Camisa de alta calidad', precio: 150.0, imagen: 'imagenes/camisa3.jpg', talla: 'S, M, L, XL' },
     { nombre: 'Camisa', descripcion: 'Camisa azul', precio: 170.45, imagen: 'imagenes/camisa4.jpg', talla: 'S, M, L, XL' },
@@ -77,6 +77,10 @@ function mostrarProductos(productos) {
                     return;
                 }
 
+                if(typeof producto.precio !== "number"){
+                    console.warn(`Error en el tipo de dato preio`, producto); 
+                    return;
+                }
                 const divProducto = document.createElement('div');
                 divProducto.classList.add('producto');
 
@@ -186,6 +190,7 @@ function agregarAlCarrito() {
             return;
         }
 
+       
 
         var imagen = document.getElementById("imagen").src;
         var nombreProducto = document.getElementById("descripcion-producto").textContent;
