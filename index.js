@@ -486,39 +486,58 @@ function confirmarCompra() {
 /** */
     // Función para manejar la confirmación de compra
 document.getElementById('confirmar-pago').addEventListener('click', () => {
-    const correo = document.getElementById('correo').value;
-    if (!correo || !validarCorreo(correo)) {
-        alert("El correo electrónico ingresado no es válido.");
-        return;
-    }
-
-    const metodoPago = obtenerMetodoPago();
-    if (!metodoPago) {
-        alert("Selecciona un método de pago válido.");
-        return;
-    }
-
-    // Mostrar la confirmación de compra
-    const mensaje = carrito.map(producto => `${producto.nombre} - Talla: ${producto.talla} - $${producto.precio}`).join("\n");
-    const totalCompra = carrito.reduce((sum, producto) => sum + producto.precio, 0);
-
-    alert(`
-        Detalles de la compra:
-        ${mensaje}
+    try {
         
-        Total: $${totalCompra.toFixed(2)}
-        
-        Método de pago: ${metodoPago}
-        
-        Compra confirmada. ¡Gracias por tu compra!
-    `);
+        const correo = document.getElementById('correo').value;
+        if (!correo || !validarCorreo(correo)) {
+            alert("El correo electrónico ingresado no es válido.");
+            return;
+        }
+    
+        const metodoPago = obtenerMetodoPago();
+        if (!metodoPago) {
+            alert("Selecciona un método de pago válido.");
+            return;
+        }
+    
+        // Mostrar la confirmación de compra
+        const mensaje = carrito.map(producto => `${producto.nombre} - Talla: ${producto.talla} - $${producto.precio}`).join("\n");
+        const totalCompra = carrito.reduce((sum, producto) => sum + producto.precio, 0);
+    
+        alert(`
+            Detalles de la compra:
+            ${mensaje}
+            
+            Total: $${totalCompra.toFixed(2)}
+            
+            Método de pago: ${metodoPago}
+            
+            Compra confirmada. ¡Gracias por tu compra!
+        `);
+    
+        // Guardar el historial de compras en el localStorage de forma segura
+        if (typeof guardarHistorialDeCompra === 'function') {
+            guardarHistorialDeCompra(correo, carrito, metodoPago);
+        } else {
+            console.warn("Advertencia: La función 'guardarHistorialDeCompra' no está definida.");
+        }
 
-    // Guardar el historial de compras en el localStorage
-    guardarHistorialDeCompra(correo, carrito, metodoPago);
+        // Vaciar el carrito después de la compra si la función existe
+        if (typeof vaciarCarrito === 'function') {
+            vaciarCarrito();
+        } else {
+            console.warn("Advertencia: La función 'vaciarCarrito' no está definida.");
+        }
 
-    // Vaciar el carrito después de la compra
-    vaciarCarrito();
-    cerrarVentanaPago();
+        // Cerrar la ventana de pago si existe la función
+        if (typeof cerrarVentanaPago === 'function') {
+            cerrarVentanaPago();
+        } else {
+            console.warn("Advertencia: La función 'cerrarVentanaPago' no está definida.");
+        }
+        } catch (error) {
+            console.error("ERROR: no se pudo confirmar el pago");
+        }
 });
 
 // Función para validar el correo
