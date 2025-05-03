@@ -540,7 +540,6 @@ function obtenerMetodoPago() {
 /**/
 
 
-
 // Función para cerrar el ventana de pago
 function cerrarVentanaPago() {
     document.getElementById('ventana-pago').style.display = 'none';
