@@ -51,6 +51,45 @@ const productos = [
     { nombre: 'Vestido', descripcion: 'Vestido ', precio: 678.55, imagen: 'imagenes/vestido5.jpg', talla: 'M, L, X, S' },
 ];
 
+// Validación: asegurar que 'productos' es un arreglo y contiene productos válidos
+if (!Array.isArray(productos)) {
+    console.error("ERROR: 'productos' no está definido correctamente.");
+} else {
+    // Validación: asegurar que cada producto tenga las propiedades necesarias
+    productos.forEach((producto, index) => {
+        const errores = [];
+
+        // Valida que el nombre no sea una cadena vacia
+        if (typeof producto.nombre !== 'string' || producto.nombre.trim() === '') {
+            errores.push("nombre inválido");
+        }
+
+        // Valida que la descripcion sea una cadena
+        if (typeof producto.descripcion !== 'string') {
+            errores.push("descripción inválida");
+        }
+
+        // Valida que el precio sea un numero positivo
+        if (typeof producto.precio !== 'number' || producto.precio < 0) {
+            errores.push("precio inválido");
+        }
+
+        // Valida que la ruta de la imagen sea una cadena valida y este en la carpeta
+        if (typeof producto.imagen !== 'string' || !producto.imagen.startsWith('imagenes/')) {
+            errores.push("ruta de imagen inválida");
+        }
+
+        // Valida que la talla este espesificada como cadena no vacia
+        if (typeof producto.talla !== 'string' || producto.talla.trim() === '') {
+            errores.push("talla no especificada");
+        }
+
+        // Muestra los errores si es que se presentaron en la consola
+        if (errores.length > 0) {
+            console.warn(`Producto inválido en índice ${index}:`, errores, producto);
+        }
+    });
+}
 
 // Función para mostrar los productos en el contenedor principal de los productos
 function mostrarProductos(productos) {
@@ -62,7 +101,7 @@ function mostrarProductos(productos) {
             return; //Detiene la ejecucion 
         }
 
-        //Se verifica que productos sea un array
+        // Se verifica que productos sea un array
         if(!Array.isArray(productos)){
             console.error("Prodcutos no es un array")
             return; 
@@ -71,7 +110,7 @@ function mostrarProductos(productos) {
 
         productos.forEach(producto => {
             try {
-                //Se valida los datos del producto antes de procesarlos
+                // Se valida los datos del producto antes de procesarlos
                 if(!producto || !producto.imagen || !producto.nombre || !producto.precio) {
                     console.warn("Producto incompleto");
                     return;
@@ -107,42 +146,52 @@ function mostrarProductos(productos) {
 // Llamar a la función para mostrar los productos al cargar la página
 mostrarProductos(productos);
 
-//Funcion para mostrar una vista mas grande con la informacion del producto
+//Funcion para mostrar una vista ampliada con la informacion del producto
 function verImagenGrande(elemento) {
     try {
+
+        // Se obtiene el contenedor de la vista grande y se verifica que exista
         var vistaGrandeProducto = document.getElementById("vista-grande");
         if(!vistaGrandeProducto) {
             console.error("No se encontro el contenedor vista grande");
             return;
         }
+        
+        // Obtiene el elemento donde se mostrara la imagen y verifica si existe
         var imagenGrande = document.getElementById("imagen");
         if (!imagenGrande) {
             console.error("No se encontro el contenedor de la imagen grande");
             return;
         }
+        
+        // Obtiene el elemento donde se mostrara la descripcion del producto y verifica si existe
         var descripcion = document.getElementById("descripcion-producto");
         if (!descripcion) {
             console.error("No se encontro el contenedor para la descripcion del producto");
             return;
         }
+        
         var precio = document.getElementById("precio-producto");
         var talla = document.getElementById("talla-modal");
         var tallasSelect = document.getElementById("tallas-producto");
     
+        // Se extraen los datos del producto 
         var imgUrl = elemento.getAttribute("data-img");
         var desc = elemento.getAttribute("data-description");
         var precioValue = elemento.getAttribute("data-price");
         var tallasValue = elemento.getAttribute("data-size").split(", ");
         
-       
 
+        // Muestra la imagen grande
         imagenGrande.src = imgUrl;
+
+        // Se inserta la informacion en el contenedor
         descripcion.innerHTML = desc;
         precio.innerHTML = "Precio: $" + precioValue;
         talla.innerHTML = "Tallas disponibles: ";
-    
         tallasSelect.innerHTML = "<option value=''>Seleccionar talla</option>";
     
+        //por cada talla del producto se crea una opcion en el <select>
         tallasValue.forEach(function(talla) {
             var option = document.createElement("option");
             option.value = talla;
@@ -150,6 +199,7 @@ function verImagenGrande(elemento) {
             tallasSelect.appendChild(option);
         });
     
+        //muestra el contenedor de la vista ampliada
         vistaGrandeProducto.style.display = "block";
     } catch (error) {
         console.error("Error al ver la vista grande", error);
@@ -182,6 +232,8 @@ function cerrarVistaGrande(event) {
 function vistaGrande(event) {
     console.log(event.target); // aquí se usaría el target recibido
 }
+
+// Funcion para agregar los productos al carrito
 function agregarAlCarrito() {
     try {
 
@@ -190,27 +242,33 @@ function agregarAlCarrito() {
             return;
         }
 
+        //obtiene la talla seleccionada
         const tallaSeleccionada = document.getElementById("tallas-producto").value;
+        //verifica si se selecciono la talla
         if (!tallaSeleccionada) {
             alert("Por favor, selecciona una talla antes de agregar al carrito.");
             return;
         }
 
        
-
+        // Obtiene los datos del producto 
         var imagen = document.getElementById("imagen").src;
         var nombreProducto = document.getElementById("descripcion-producto").textContent;
         var precioProducto = parseFloat(document.getElementById("precio-producto").textContent.replace('Precio: $', '').trim());
 
 
+        // Verifica si el carrito esta inicializado correctamente
         if (typeof carrito === "undefined"){
             console.error("EL carrito aun no esta inicailizado", error);
             return ;
         }
 
+        // Agrega el producto al carrito
         carrito.push({ nombre: nombreProducto, imagen, precio: precioProducto, talla: tallaSeleccionada });
 
         alert("Producto añadido al carrito: " + nombreProducto + " - Talla " + tallaSeleccionada);
+
+        // Actualiza los productos en el carrito si es que existe la funcion actulizarcarrito
         if(typeof actualizarCarrito == 'function'){
             actualizarCarrito();
         }else{console.warn("ERROR: no esta definida la funcion actualizar carrito");}
@@ -223,21 +281,26 @@ function agregarAlCarrito() {
 
 //Funcion que actualiza los productos en el carrito con el total de la compra
 function actualizarCarrito() {
-    try {    
+    try {
+
         const carritoLista = document.getElementById("carrito-lista");
         const totalElement = document.getElementById("total");
-        // Verificar si se encuentran los contenedores que se vana a usar
+
+        // Verificar si se encuentran los contenedores que se van a usar
         if (!carritoLista || !totalElement){
             console.error("Error: No se encontro el contenedor carrito o total");
             return;
         }
    
-
+        // Limpia el contenido de actual de los productos en el carrito
         carritoLista.innerHTML = "";
+
+        // Recorre cada producto para mostrarlo
         carrito.forEach((producto, index) => {
             console.log("precio del producto seleccionado");
             console.log(producto.precio);
 
+            // Verifica que el precio sea valido
             if (!producto || typeof producto.precio !== "number"){
                 console.warn(`Producto invalido en el index ${index}:`, producto);
                 return;
@@ -246,10 +309,12 @@ function actualizarCarrito() {
             const li = document.createElement("li");
             li.textContent = `${producto.nombre} - Talla: ${producto.talla} - $${producto.precio}`;
             
+            // Se crea un boton para eliminar un producto del carrito
             const eliminarButton = document.createElement("button");
             eliminarButton.textContent = "Quitar";
             eliminarButton.onclick = () => eliminarProducto(index);
 
+            // Se añade el boton a los elementos de la lista en carrito
             li.appendChild(eliminarButton);
             carritoLista.appendChild(li);
         });
@@ -262,14 +327,20 @@ function actualizarCarrito() {
     }
 }
 
+//Funcion que elimina un producto del carrito de acuerdo a su indice
 function eliminarProducto(index) {
     try {
         
+        //se verifica que el carrito sea un arreglo antes de operar sobr él
         if(!Array.isArray(carrito)){
             console.error("Error: carrito no es un arreglo");
             return;
         }
+
+        //Elimina un elemento en la posicion espesificada
         carrito.splice(index, 1);
+
+        //actuliza los productos del carrito despues de eliminar alguno
         actualizarCarrito();
     } catch (error){
         console.error("Error: Error, no se pudo eliminar el producto");
@@ -277,15 +348,19 @@ function eliminarProducto(index) {
     
 }
 
+//Quita todos los productos que se encuentra en el carrito
 function vaciarCarrito() {
     try {
+        // verifica el carrito
         if(!Array.isArray(carrito)){
             console.warn("Error:carrito no es un arreglo, y no se puede vaciar");
             return;
         }
 
+        //vacia el carrito sin crear uno nuevo
         carrito.length = 0;
 
+        //verifica que exista la funcion actulizar carrito
         if(typeof actualizarCarrito === 'function'){
             actualizarCarrito();
         }else{
@@ -299,17 +374,22 @@ function vaciarCarrito() {
     // actualizarCarrito();
 }
 
+//Permite visualizar el carrito de compras y cerrarlo
 function cerrarCarrito() {
     try {
+
         const carritoModal = document.getElementById("ventana-carrito");
 
+        //verifca que si se encuentre el conteneder ventana-carrito
         if (!carritoModal) {
             console.error("Error: No se encontró el elemento con id 'ventana-carrito'.");
             return;
         }
 
+        //se optiene el estado actual de la visibilidad
         const estadoActual = carritoModal.style.display?.toLowerCase() || "";
 
+        //muestra u oculta la ventana-carrito segun la visibilidad actual    
         if (estadoActual === "none" || estadoActual === "") {
             carritoModal.style.display = "block";
         } else {
@@ -325,22 +405,26 @@ function cerrarCarrito() {
 // Función de búsqueda lineal para buscar un producto por nombre
 function buscarProducto(query) {
     try {
+        //verifica que el parametro sea una cadena
         if (typeof query !== 'string') {
             console.warn("La búsqueda debe ser una cadena de texto.");
             return;
         }
 
+        //limpia y normaliza la busqueda
         query = query.toLowerCase().trim();
-
-        if (!isNaN(query)) {
+    
+        if (!isNaN(query)) { //si la entrada es un numero
             console.warn("Por favor, ingrese un nombre o palabra clave para buscar productos.");
         }
 
-        if (!Array.isArray(productos)) {
+        //verifica que la lista de productos este definida
+        if (!Array.isArray(productos)) { 
             console.error("Error: 'productos' no está definido o no es un arreglo.");
             return;
         }
 
+        // Filtra los productos que incluyan el texto buscado  
         const resultados = productos.filter(producto =>
             producto?.nombre?.toLowerCase().includes(query)
         );
@@ -349,6 +433,7 @@ function buscarProducto(query) {
             alert("No se encontraron productos con esa búsqueda.");
         }
 
+        //verifica que exista la funcion mostrarProductos
         if (typeof mostrarProductos === 'function') {
             mostrarProductos(resultados);
         } else {
@@ -375,13 +460,26 @@ document.getElementById('barra-busqueda').addEventListener('input', () => {
 
 //confirmar compra de productos
 function confirmarCompra() {
-    if (carrito.length == 0) {
-        alert("El carrito está vacío. Agrega productos para comprar.");
-        return;
-    }
+    try {
+        //En caso de que el carito no contenga productos mostrar un mensaje
+        if (carrito.length == 0) {
+            alert("El carrito está vacío. Agrega productos para comprar.");
+            return;
+        }
+        
+        const ventanaPago = document.getElementById('ventana-pago');
 
-    // Mostrar la ventana para correo y selección de pago
-    document.getElementById('ventana-pago').style.display = 'block';
+        //verifica si exisite la ventana-pago
+        if(!ventanaPago) {
+            console.error("ERROR: no se encontro el contenedor ventana-pago");
+            return;
+        }
+        ventanaPago.style.display = 'block';
+        // Mostrar la ventana para correo y selección de pago
+        // document.getElementById('ventana-pago').style.display = 'block';
+    } catch(error) {
+        console.error("ERROR: error al confirmar la compra", error);
+    }
 }
 
 
