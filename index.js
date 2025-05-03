@@ -184,6 +184,12 @@ function vistaGrande(event) {
 }
 function agregarAlCarrito() {
     try {
+
+        if(!Array.isArray(carrito)){
+            console.error("Error: carrito no es un arreglo");
+            return;
+        }
+
         const tallaSeleccionada = document.getElementById("tallas-producto").value;
         if (!tallaSeleccionada) {
             alert("Por favor, selecciona una talla antes de agregar al carrito.");
@@ -205,7 +211,9 @@ function agregarAlCarrito() {
         carrito.push({ nombre: nombreProducto, imagen, precio: precioProducto, talla: tallaSeleccionada });
 
         alert("Producto añadido al carrito: " + nombreProducto + " - Talla " + tallaSeleccionada);
-        actualizarCarrito();
+        if(typeof actualizarCarrito == 'function'){
+            actualizarCarrito();
+        }else{console.warn("ERROR: no esta definida la funcion actualizar carrito");}
         vistaGrande({target: document.getElementById("vista-grande")});
 
     }catch(error){
@@ -220,7 +228,7 @@ function actualizarCarrito() {
         const totalElement = document.getElementById("total");
         // Verificar si se encuentran los contenedores que se vana a usar
         if (!carritoLista || !totalElement){
-            console.error("Error: No se encontro el contenedor carrito o total")
+            console.error("Error: No se encontro el contenedor carrito o total");
             return;
         }
    
@@ -255,43 +263,102 @@ function actualizarCarrito() {
 }
 
 function eliminarProducto(index) {
-    carrito.splice(index, 1);
-    actualizarCarrito();
+    try {
+        
+        if(!Array.isArray(carrito)){
+            console.error("Error: carrito no es un arreglo");
+            return;
+        }
+        carrito.splice(index, 1);
+        actualizarCarrito();
+    } catch (error){
+        console.error("Error: Error, no se pudo eliminar el producto");
+    }
+    
 }
 
 function vaciarCarrito() {
-    carrito = [];
-    actualizarCarrito();
+    try {
+        if(!Array.isArray(carrito)){
+            console.warn("Error:carrito no es un arreglo, y no se puede vaciar");
+            return;
+        }
+
+        carrito.length = 0;
+
+        if(typeof actualizarCarrito === 'function'){
+            actualizarCarrito();
+        }else{
+            console.warn("ERROR: no es eat definida la funcion actualizar carrito");
+        }
+
+    } catch (error) {
+        console.error("Error: error al vaciar el carrito", error);
+    }
+    // carrito = [];
+    // actualizarCarrito();
 }
 
 function cerrarCarrito() {
-    const carritoModal = document.getElementById("ventana-carrito");
+    try {
+        const carritoModal = document.getElementById("ventana-carrito");
 
-    if (carritoModal.style.display === "none" || carritoModal.style.display === "") {
-        carritoModal.style.display = "block";
-    } else {
-        carritoModal.style.display = "none";
+        if (!carritoModal) {
+            console.error("Error: No se encontró el elemento con id 'ventana-carrito'.");
+            return;
+        }
+
+        const estadoActual = carritoModal.style.display?.toLowerCase() || "";
+
+        if (estadoActual === "none" || estadoActual === "") {
+            carritoModal.style.display = "block";
+        } else {
+            carritoModal.style.display = "none";
+        }
+    } catch (error) {
+        console.error("Error al intentar cerrar o abrir el carrito:", error);
     }
 }
+
 
 
 // Función de búsqueda lineal para buscar un producto por nombre
 function buscarProducto(query) {
-    query = query.toLowerCase().trim();
-
-    const resultados = [];
-    for (let i = 0; i < productos.length; i++) {
-        if (productos[i].nombre.toLowerCase().includes(query)) {
-            resultados.push(productos[i]);
+    try {
+        if (typeof query !== 'string') {
+            console.warn("La búsqueda debe ser una cadena de texto.");
+            return;
         }
-    }
 
-    if (resultados.length === 0) {
-        alert("No se encontraron productos con esa búsqueda.");
-    }
+        query = query.toLowerCase().trim();
 
-    mostrarProductos(resultados); // Actualiza los productos mostrados
+        if (!isNaN(query)) {
+            console.warn("Por favor, ingrese un nombre o palabra clave para buscar productos.");
+        }
+
+        if (!Array.isArray(productos)) {
+            console.error("Error: 'productos' no está definido o no es un arreglo.");
+            return;
+        }
+
+        const resultados = productos.filter(producto =>
+            producto?.nombre?.toLowerCase().includes(query)
+        );
+
+        if (resultados.length === 0) {
+            alert("No se encontraron productos con esa búsqueda.");
+        }
+
+        if (typeof mostrarProductos === 'function') {
+            mostrarProductos(resultados);
+        } else {
+            console.warn("Advertencia: 'mostrarProductos' no está definida o no es una función.");
+        }
+    } catch (error) {
+        console.error("Error durante la búsqueda de productos:", error);
+    }
 }
+
 
 // Manejo de eventos de búsqueda
 document.getElementById('boton-busqueda').addEventListener('click', () => {

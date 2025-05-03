@@ -230,12 +230,14 @@ button{
     margin-top: 1%;
 }
 #btn-agregar{
-    background-color: green;
-    border-radius: 5px;
-    padding: 5px;
-    float: left;
     width: 90%;
+    background-color:#27d521;
+    border-radius: 5px;
+    padding: 10px 5px;
+    float: left;
     text-align: center;
+    color: blue;
+    font-size: 12px;
     font-family: poppins;
 }
 
@@ -564,7 +566,6 @@ ul{
         margin-top: .5%;
     }
     #btn-agregar{
-        background-color: green;
         border-radius: 5px;
         padding: 5px;
         float: left;
