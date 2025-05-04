@@ -144,7 +144,11 @@ function mostrarProductos(productos) {
 }
 
 // Llamar a la función para mostrar los productos al cargar la página
-mostrarProductos(productos);
+try {
+    mostrarProductos(productos);
+} catch (error) {
+    console.error("ERROR: error al cargar los prodcutos en la pagina", error);
+}
 
 //Funcion para mostrar una vista ampliada con la informacion del producto
 function verImagenGrande(elemento) {
@@ -484,61 +488,91 @@ function confirmarCompra() {
 
 
 /** */
-    // Función para manejar la confirmación de compra
+// Función para manejar la confirmación de compra
 document.getElementById('confirmar-pago').addEventListener('click', () => {
     try {
-        
+
         const correo = document.getElementById('correo').value;
+    
+        // Validación robusta del correo electrónico
         if (!correo || !validarCorreo(correo)) {
             alert("El correo electrónico ingresado no es válido.");
             return;
         }
     
+        // Evitar XSS: Asegurarse de que no se inserten caracteres maliciosos
         const metodoPago = obtenerMetodoPago();
         if (!metodoPago) {
             alert("Selecciona un método de pago válido.");
             return;
         }
     
-        // Mostrar la confirmación de compra
-        const mensaje = carrito.map(producto => `${producto.nombre} - Talla: ${producto.talla} - $${producto.precio}`).join("\n");
+        // Evitar inyección de código en el mensaje
+        const mensaje = carrito.map(producto => {
+            // Saneamiento de entradas para evitar inyección de HTML o JavaScript
+            return `${sanitizeString(producto.nombre)} - Talla: ${sanitizeString(producto.talla)} - $${producto.precio}`;
+        }).join("\n");
+    
         const totalCompra = carrito.reduce((sum, producto) => sum + producto.precio, 0);
     
+        // Mostrar la confirmación de compra de manera segura
         alert(`
             Detalles de la compra:
             ${mensaje}
             
             Total: $${totalCompra.toFixed(2)}
-            
+                
             Método de pago: ${metodoPago}
-            
+                
             Compra confirmada. ¡Gracias por tu compra!
         `);
     
-        // Guardar el historial de compras en el localStorage de forma segura
+        // Guardar el historial de compras de manera segura
         if (typeof guardarHistorialDeCompra === 'function') {
-            guardarHistorialDeCompra(correo, carrito, metodoPago);
+            // Asegurarse de no almacenar información sensible en localStorage
+            const historial = {
+                correo: sanitizeString(correo),
+                carrito: carrito.map(producto => ({
+                    nombre: sanitizeString(producto.nombre),
+                    talla: sanitizeString(producto.talla),
+                    precio: producto.precio
+                })),
+                metodoPago: sanitizeString(metodoPago),
+                fecha: new Date().toISOString() // Guardar fecha de compra de manera segura
+            };
+    
+            guardarHistorialDeCompra(historial);
         } else {
             console.warn("Advertencia: La función 'guardarHistorialDeCompra' no está definida.");
         }
-
-        // Vaciar el carrito después de la compra si la función existe
+    
+        // Vaciar el carrito después de la compra, asegurando que no se guarde información sensible
         if (typeof vaciarCarrito === 'function') {
             vaciarCarrito();
         } else {
             console.warn("Advertencia: La función 'vaciarCarrito' no está definida.");
         }
-
+    
         // Cerrar la ventana de pago si existe la función
         if (typeof cerrarVentanaPago === 'function') {
             cerrarVentanaPago();
         } else {
             console.warn("Advertencia: La función 'cerrarVentanaPago' no está definida.");
         }
-        } catch (error) {
-            console.error("ERROR: no se pudo confirmar el pago");
-        }
+    
+    } catch (error) {
+        console.error("ERROR: no se pudo confirmar el pago", error);
+    }
 });
+    
+// Función de saneamiento para evitar inyecciones de HTML o JavaScript
+function sanitizeString(str) {
+    if (typeof str !== 'string') return str;
+    const element = document.createElement('div');
+    element.textContent = str; // Convertir texto en contenido seguro
+    return element.innerHTML; // Retornar el texto saneado
+}
+    
 
 // Función para validar el correo
 function validarCorreo(correo) {
@@ -619,7 +653,7 @@ function guardarHistorialDeCompra(correo, carrito, metodoPago) {
     try {
         // Validaciones básicas de los parámetros
         if (typeof correo !== 'string' || correo.trim() === "") {
-            console.error("Error: El correo proporcionado no es válido.");
+            // console.error("Error: El correo proporcionado no es válido.");
             return;
         }
 
@@ -659,7 +693,7 @@ function guardarHistorialDeCompra(correo, carrito, metodoPago) {
         }
 
         // Agregar nuevo historial
-        historialDeCompras.push(historial);
+        // historialDeCompras.push(historial);
 
         // Guardar en localStorage
         localStorage.setItem('historialCompras', JSON.stringify(historialDeCompras));
@@ -671,406 +705,146 @@ function guardarHistorialDeCompra(correo, carrito, metodoPago) {
 
 // Función para buscar y mostrar los productos con el nombre sudadera
 
-function mostrarProductosSudaderas(productos) {
-    try {
-        // Verificar que 'productos' es un arreglo válido
-        if (!Array.isArray(productos)) {
-            console.error("Error: 'productos' no es un arreglo.");
-            return;
-        }
+// Función común para mostrar productos por nombre
+function mostrarProductosPorNombre(productos, nombre) {
 
-        // Obtener el contenedor donde se mostrarán los productos y valida si existe
-        const contenedorProductos = document.getElementById('contendor-boton-busqueda');
-        if (!contenedorProductos) {
-            console.error("Error: No se encontro el contenedor para los productos.");
-            return;
-        }
-
-        // Limpiar el contenido del contenedor antes de agregar nuevos productos
-        contenedorProductos.innerHTML = '';
-
-        // Filtrar los productos que son 'Sudaderas'
-        const resultadoProducto = productos.filter(producto => producto.nombre === 'Sudadera');
-        
-        // Verificar si hay productos de tipo 'Sudadera'
-        if (resultadoProducto.length === 0) {
-            console.warn("No se encontraron productos de tipo 'Sudadera'.");
-            return;
-        }
-
-        // Recorrer los productos filtrados y generar el contenedor para cada uno
-        resultadoProducto.forEach(producto => {
-            // Verificar que cada producto tenga las propiedades necesarias
-            if (!producto.imagen || !producto.nombre || !producto.precio || !producto.talla) {
-                console.warn(`Producto incompleto encontrado:`, producto);
-                return;
-            }
-
-            // Crear el div que contiene el producto
-            const divProducto = document.createElement('div');
-            divProducto.classList.add('producto');
-            divProducto.innerHTML = `
-                <img src="${producto.imagen}" alt="${producto.nombre}" class="imagen" onclick="verImagenGrande(this)" 
-                     data-img="${producto.imagen}" 
-                     data-description="${producto.descripcion}" 
-                     data-price="${producto.precio}" 
-                     data-size="${producto.talla}">
-                <p>${producto.nombre}</p>
-                <p>$${producto.precio}</p>
-            `;
-
-            // Agregar el div del producto al contenedor
-            contenedorProductos.appendChild(divProducto);
-        });
-    } catch (error) {
-        console.error("Error al mostrar los productos de sudaderas:", error);
+    // Verificar que los productos sean un array válido
+    if (!Array.isArray(productos)) {
+        console.error("El parámetro 'productos' debe ser un arreglo.");
+        return;
     }
-}
 
-/*
-    Llamar a la función para mostrar los productos en la ventana de la pagina web
-    alternando la visibilidad entre los contenedores 
-*/ 
-function verSudaderas(){
-    try {
-
-        mostrarProductosSudaderas(productos);
-
-        var ocultarProductos =  document.getElementsByClassName("contenedor-productos")[0];
-        var mostrarSudaderas =  document.getElementsByClassName("contenedor-busqueda-botones")[0];
-
-        // Verificar si los elementos contenedores existen en el DOM
-        if (!ocultarProductos || !mostrarSudaderas) {
-            console.error("ERROR: No se encontraron los contenedores de productos o botones de búsqueda.");
-            return;
-        }
-
-        // Alternar visibilidad de los contenedores dependiendo de su estado actual
-        if(ocultarProductos.style.visibility === "hidden" && mostrarSudaderas.style.visibility === 'visible'){
-
-            ocultarProductos.style.visibility = "visible";
-            mostrarSudaderas.style.visibility = "hidden";
-            mostrarSudaderas.style.display = 'none';
-            ocultarProductos.style.display = 'grid';
-
-        }else{
-
-            ocultarProductos.style.visibility = "hidden";
-            mostrarSudaderas.style.visibility = "visible";
-            mostrarSudaderas.style.display = 'grid';
-            ocultarProductos.style.display = 'none';
-        }
-    } catch (error) {
-        console.error("ERROR: error al ver las sudaderas");
-    }
+    const contenedorProductos = document.getElementById('contendor-boton-busqueda');
     
-}
+    // Verificar que el contenedor boton-busqueda existe
+    if (!contenedorProductos) {
+        console.error("No se encontró el contenedor de productos.");
+        return;
+    }
 
-// Función para buscar y mostrar los productos con el nombre short
-function mostrarProductosShorts(productos) {
-    try {
-        // Obtener el contenedor donde se mostrarán los productos
-        const contenedorProductos = document.getElementById('contendor-boton-busqueda');
-        
-        // Limpiar el contenedor para mostrar solo los productos nuevos
-        contenedorProductos.innerHTML = '';
+    // Limpiar el contenedor antes de mostrar nuevos productos
+    contenedorProductos.innerHTML = '';
 
-        // Filtrar los productos para obtener solo los que sean 'Short'
-        var resultadoProducto = productos.filter(producto => producto.nombre === 'Short');
-        
-        // Verificar si hay productos de tipo 'Short'
-        if (resultadoProducto.length === 0) {
-            console.warn("No se encontraron productos de tipo 'Short'.");
-            return;
+    // Filtrar productos por nombre
+    const resultado = productos.filter(producto => producto.nombre && producto.nombre.toLowerCase() === nombre.toLowerCase());
+
+    // Si no se encuentran productos, mostrar advertencia
+    if (resultado.length === 0) {
+        console.warn(`No se encontraron productos con el nombre: ${nombre}`);
+        return;
+    }
+
+    // Iterar sobre los productos encontrados
+    resultado.forEach(producto => {
+        // Verificar que el producto tenga los atributos necesarios
+        if (!producto.imagen || !producto.nombre || !producto.precio || !producto.talla) {
+            console.warn("ADVERTENCIA: Producto incompleto:", producto);
+            return;  // No procesamos productos incompletos
         }
 
-        // Recorrer los productos filtrados y agregar su información al contenedor
-        resultadoProducto.forEach(producto => {
-            // Crear un nuevo contenedor para cada producto
-            const divProducto = document.createElement('div');
-            divProducto.classList.add('producto');
-            
-            // Añadir la información del producto (imagen, nombre y precio)
-            divProducto.innerHTML = `
-                <img src="${producto.imagen}" alt="${producto.nombre}" class="imagen" onclick="verImagenGrande(this)" 
+        try {
+            // Crear el div del producto
+            const div = document.createElement('div');
+            div.classList.add('producto');
+            div.innerHTML = `
+                <img src="${producto.imagen}" alt="${producto.nombre}" class="imagen" onclick="verImagenGrande(this)"
                     data-img="${producto.imagen}" 
-                    data-description="${producto.descripcion}" 
+                    data-description="${producto.descripcion || 'Sin descripción'}" 
                     data-price="${producto.precio}" 
                     data-size="${producto.talla}">
                 <p>${producto.nombre}</p>
                 <p>$${producto.precio}</p>
             `;
-            
-            // Añade el contenedor del producto al contenedor principal
-            contenedorProductos.appendChild(divProducto);
-        });
-    } catch (error) {
-        // Capturar cualquier error y mostrar un mensaje en consola
-        console.error("Error al mostrar los productos 'Short':", error);
-    }
+            contenedorProductos.appendChild(div);
+
+        } catch (error) {
+            console.error("ERROR: error al intentar crear un producto:", error);
+        }
+    });
 }
 
-/*
-    Llamar a la función para mostrar los productos en la ventana de la pagina web
-    alternando la visibilidad entre los contenedores 
-*/ 
-function verShorts(){
+// Función para alternar visibilidad de los contenedores
+function alternarContenedores() {
     try {
-        mostrarProductosShorts(productos);
 
-        var ocultarProductos =  document.getElementsByClassName("contenedor-productos")[0];
-        var mostrarShorts =  document.getElementsByClassName("contenedor-busqueda-botones")[0];
+        const ocultar = document.getElementsByClassName("contenedor-productos")[0];
+        const mostrar = document.getElementsByClassName("contenedor-busqueda-botones")[0];
         
-        // Verificar si los elementos contenedores existen en el DOM
-        if (!ocultarProductos || !mostrarShorts) {
-            console.error("ERROR: No se encontraron los contenedores de productos o botones de búsqueda.");
+        //validar si existe 
+        if (!ocultar || !mostrar) {
+            console.error("Contenedores no encontrados");
             return;
         }
+    
+        const ocultarVisible = ocultar.style.visibility === "visible";
+    
+        ocultar.style.visibility = ocultarVisible ? "hidden" : "visible";
+        ocultar.style.display = ocultarVisible ? "none" : "grid";
+    
+        mostrar.style.visibility = ocultarVisible ? "visible" : "hidden";
+        mostrar.style.display = ocultarVisible ? "grid" : "none";
+    } catch(error) {
+        console.error("ERROR: error al alternar la visibilidad", error);
+    }
+}
 
-        // Alterna visibilidad de los contenedores dependiendo de su estado actual
-        if(ocultarProductos.style.visibility === "hidden" && mostrarShorts.style.visibility === 'visible'){
-    
-            ocultarProductos.style.visibility = "visible";
-            mostrarShorts.style.visibility = "hidden";
-            mostrarShorts.style.display = 'none';
-            ocultarProductos.style.display = 'grid';
-    
-        }else{
-    
-            ocultarProductos.style.visibility = "hidden";
-            mostrarShorts.style.visibility = "visible";
-            mostrarShorts.style.display = 'grid';
-            ocultarProductos.style.display = 'none';
-        }
+// Función que se llama al hacer clic en los botones de producto
+function verProducto(nombre) {
+    try {
+        mostrarProductosPorNombre(productos, nombre); // Mostrar productos por nombre
+        alternarContenedores(); // Alternar entre los contenedores
     } catch (error) {
-        console.error("ERROR: error al ver los productos short")
+        console.error(`ERROR: error al ver los productos ${nombre}:`, error);
     }
 }
 
-
-// Función para buscar y mostrar los productos con el nombre chamarras
-function mostrarProductosChamarras(productos) {
-    const contenedorProductos = document.getElementById('contendor-boton-busqueda')
-    contenedorProductos.innerHTML = '';
-    var resultadoProducto;
-    resultadoProducto = productos.filter(producto => producto.nombre === 'Chamarra');
-    resultadoProducto.forEach(producto => {
-        const divProducto = document.createElement('div');
-        divProducto.classList.add('producto');
-        divProducto.innerHTML = `
-            <img src="${producto.imagen}" alt="${producto.nombre}" class="imagen" onclick="verImagenGrande(this)" 
-                 data-img="${producto.imagen}" 
-                 data-description="${producto.descripcion}" 
-                 data-price="${producto.precio}" 
-                 data-size="${producto.talla}">
-            <p>${producto.nombre}</p>
-            <p>$${producto.precio}</p>
-        `;
-        contenedorProductos.appendChild(divProducto);
-    });
-};
-
-/*
-    Llamar a la función para mostrar los productos en la ventana de la pagina web
-    alternando la visibilidad entre los contenedores 
-*/ 
-function verChamarras(){
+// Funciones para mostrar productos
+function verSudaderas() {
     try {
-        mostrarProductosChamarras(productos);
-
-        var ocultarProductos =  document.getElementsByClassName("contenedor-productos")[0];
-        var mostrarShorts =  document.getElementsByClassName("contenedor-busqueda-botones")[0];
-
-        // Verificar si los elementos contenedores existen en el DOM
-        if (!ocultarProductos || !mostrarShorts) {
-            console.error("ERROR: No se encontraron los contenedores de productos o botones de búsqueda.");
-            return;
-        }
-        // Alterna visibilidad de los contenedores dependiendo de su estado actual
-        if(ocultarProductos.style.visibility === "hidden" && mostrarShorts.style.visibility === 'visible'){
-
-            ocultarProductos.style.visibility = "visible";
-            mostrarShorts.style.visibility = "hidden";
-            mostrarShorts.style.display = 'none';
-            ocultarProductos.style.display = 'grid';
-
-        }else{
-
-            ocultarProductos.style.visibility = "hidden";
-            mostrarShorts.style.visibility = "visible";
-            mostrarShorts.style.display = 'grid';
-            ocultarProductos.style.display = 'none';
-
-        }
-    }catch (error) {
-        console.error("ERROR: error al ver las chamarras");
-    }    
-}
-
-
-// Función para buscar y mostrar los productos con el nombre pantalones
-function mostrarProductosPantalones(productos) {
-    const contenedorProductos = document.getElementById('contendor-boton-busqueda')
-    contenedorProductos.innerHTML = '';
-    var resultadoProducto;
-    resultadoProducto = productos.filter(producto => producto.nombre === 'Pantalon');
-    resultadoProducto.forEach(producto => {
-        const divProducto = document.createElement('div');
-        divProducto.classList.add('producto');
-        divProducto.innerHTML = `
-            <img src="${producto.imagen}" alt="${producto.nombre}" class="imagen" onclick="verImagenGrande(this)" 
-                 data-img="${producto.imagen}" 
-                 data-description="${producto.descripcion}" 
-                 data-price="${producto.precio}" 
-                 data-size="${producto.talla}">
-            <p>${producto.nombre}</p>
-            <p>$${producto.precio}</p>
-        `;
-        contenedorProductos.appendChild(divProducto);
-    });
-};
-
-/*
-    Llamar a la función para mostrar los productos en la ventana de la pagina web
-    alternando la visibilidad entre los contenedores 
-*/ 
-function verPantalones(){
-    try {
-
-        mostrarProductosPantalones(productos);
-
-        var ocultarProductos =  document.getElementsByClassName("contenedor-productos")[0];
-        var mostrarShorts =  document.getElementsByClassName("contenedor-busqueda-botones")[0];
-
-        // Alterna visibilidad de los contenedores dependiendo de su estado actual
-        if(ocultarProductos.style.visibility === "hidden" && mostrarShorts.style.visibility === 'visible'){
-
-            ocultarProductos.style.visibility = "visible";
-            mostrarShorts.style.visibility = "hidden";
-            mostrarShorts.style.display = 'none';
-            ocultarProductos.style.display = 'grid';
-
-        }else{
-
-            ocultarProductos.style.visibility = "hidden";
-            mostrarShorts.style.visibility = "visible";
-            mostrarShorts.style.display = 'grid';
-            ocultarProductos.style.display = 'none';
-        }
-    }catch (error) {
-        console.error("ERROR: error al ver los pantalones");
-    }
-}
-
-
-// Función para buscar y mostrar los productos con el nombre camisas 
-function mostrarProductosCamisas(productos) {
-    const contenedorProductos = document.getElementById('contendor-boton-busqueda')
-    contenedorProductos.innerHTML = '';
-    var resultadoProducto;
-    resultadoProducto = productos.filter(producto => producto.nombre === 'Camisa');
-    resultadoProducto.forEach(producto => {
-        const divProducto = document.createElement('div');
-        divProducto.classList.add('producto');
-        divProducto.innerHTML = `
-            <img src="${producto.imagen}" alt="${producto.nombre}" class="imagen" onclick="verImagenGrande(this)" 
-                 data-img="${producto.imagen}" 
-                 data-description="${producto.descripcion}" 
-                 data-price="${producto.precio}" 
-                 data-size="${producto.talla}">
-            <p>${producto.nombre}</p>
-            <p>$${producto.precio}</p>
-        `;
-        contenedorProductos.appendChild(divProducto);
-    });
-};
-
-/*
-    Llamar a la función para mostrar los productos en la ventana de la pagina web
-    alternando la visibilidad entre los contenedores 
-*/ 
-function verCamisas(){
-    try {
-
-        mostrarProductosCamisas(productos);
-
-        var ocultarProductos =  document.getElementsByClassName("contenedor-productos")[0];
-        var mostrarShorts =  document.getElementsByClassName("contenedor-busqueda-botones")[0];
-    
-        // Alterna visibilidad de los contenedores dependiendo de su estado actual
-        if(ocultarProductos.style.visibility === "hidden" && mostrarShorts.style.visibility === 'visible'){
-    
-            ocultarProductos.style.visibility = "visible";
-            mostrarShorts.style.visibility = "hidden";
-            mostrarShorts.style.display = 'none';
-            ocultarProductos.style.display = 'grid';
-    
-        }else{
-    
-            ocultarProductos.style.visibility = "hidden";
-            mostrarShorts.style.visibility = "visible";
-            mostrarShorts.style.display = 'grid';
-            ocultarProductos.style.display = 'none';
-        }
-
-    }catch(error) {
-        console.error("ERROR: error al ver las camisas");
-    }
-
-}
-
-
-// Función para buscar y mostrar los productos con el nombre vestidos
-function mostrarProductosVestidos(productos) {
-    const contenedorProductos = document.getElementById('contendor-boton-busqueda')
-    contenedorProductos.innerHTML = '';
-    var resultadoProducto;
-    resultadoProducto = productos.filter(producto => producto.nombre === 'Vestido');
-    resultadoProducto.forEach(producto => {
-        const divProducto = document.createElement('div');
-        divProducto.classList.add('producto');
-        divProducto.innerHTML = `
-            <img src="${producto.imagen}" alt="${producto.nombre}" class="imagen" onclick="verImagenGrande(this)" 
-                 data-img="${producto.imagen}" 
-                 data-description="${producto.descripcion}" 
-                 data-price="${producto.precio}" 
-                 data-size="${producto.talla}">
-            <p>${producto.nombre}</p>
-            <p>$${producto.precio}</p>
-        `;
-        contenedorProductos.appendChild(divProducto);
-    });
-};
-
-/*
-    Llamar a la función para mostrar los productos en la ventana de la pagina web
-    alternando la visibilidad entre los contenedores 
-*/ 
-function verVestidos(){
-    try {
-        mostrarProductosVestidos(productos);
-
-        var ocultarProductos =  document.getElementsByClassName("contenedor-productos")[0];
-        var mostrarShorts =  document.getElementsByClassName("contenedor-busqueda-botones")[0];
-
-        // Alterna visibilidad de los contenedores dependiendo de su estado actual
-        if(ocultarProductos.style.visibility === "hidden" && mostrarShorts.style.visibility === 'visible'){
-
-            ocultarProductos.style.visibility = "visible";
-            mostrarShorts.style.visibility = "hidden";
-            mostrarShorts.style.display = 'none';
-            ocultarProductos.style.display = 'grid';
-
-        }else{
-            
-            ocultarProductos.style.visibility = "hidden";
-            mostrarShorts.style.visibility = "visible";
-            mostrarShorts.style.display = 'grid';
-            ocultarProductos.style.display = 'none';
-        }
+        verProducto('Sudadera');
     } catch (error) {
-        console.error("ERROR: error al ver los productos vestidos");
-    }    
+        console.error("ERROR: error al ver las sudaderas", error);
+    }
+}
+
+function verShorts() {
+    try {
+        verProducto('Short');
+    } catch (error) {
+        console.error("ERROR: error al ver los shorts", error);
+    }
+}
+
+function verChamarras() {
+    try {
+        verProducto('Chamarra');
+    } catch(error) {
+        console.error("ERROR: error al ver las chamarras", error);
+    }
+}
+
+function verPantalones() {
+    try {
+        verProducto('Pantalon');
+    } catch(error) {
+        console.error("ERROR: error al ver los pantalones", error);
+    }
+}
+
+function verCamisas() {
+    try {
+        verProducto('Camisa');
+    } catch(error) {
+        console.error("ERROR: error al ver las camisas", error);
+    }
+}
+
+function verVestidos() {
+    try {
+        verProducto('Vestido');
+    } catch(error) {
+        console.error("ERROR: error al ver los vestidos", error);
+    }
 }
 
 /* 

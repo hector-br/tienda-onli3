@@ -87,7 +87,10 @@
                 
                 <!-- Formulario para ingresar el correo -->
                 <label for="correo" class="correo-electronico">Correo Electrónico:</label>
-                <input type="email" id="correo" placeholder="Ingresa tu correo electrónico" class="campo-correo" required >
+                <!-- <input type="email" id="correo" placeholder="Ingresa tu correo electrónico" class="campo-correo" required > -->
+                <input type="email" id="correo" name="correo" placeholder="Ingresa tu correo electrónico" 
+                class="campo-correo" required pattern="[^@\s]+@[^@\s]+\.[^@\s]+" aria-label="Correo electrónico">
+         
                 
                 <h3 class="titulo-metodo-pago">Selecciona tu método de pago</h3>
                 <input type="radio" name="metodo" value="Tarjeta de Crédito" id="tarjeta">
@@ -121,7 +124,9 @@
                 <p class="soporte">Soporte a cliente</p>
                 <div class="contactos-numero">
                     <div class="svg icono-wattsApp"></div>
-                    <a href="https://web.whatsapp.com/" class="numero">5523421333</a>
+                    <!-- <a href="https://web.whatsapp.com/" class="numero">5523421333</a> -->
+                    <a href="https://web.whatsapp.com/" class="numero" target="_blank" rel="noopener noreferrer">5523421333</a>
+
                 </div>
             </div>
 
