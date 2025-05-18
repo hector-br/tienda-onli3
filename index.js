@@ -109,6 +109,7 @@ if (!Array.isArray(productos)) {
 // Función para mostrar los productos en el contenedor principal de los productos
 function mostrarProductos(productos) {
     try {
+        console.time("Mostrar productos"); // Inicio medición
         const contenedorProductos = document.getElementById('productos-container');
         if(!contenedorProductos){
             console.error("no se encontro el contenedor productos");
@@ -155,6 +156,7 @@ function mostrarProductos(productos) {
     } catch (error) {
         console.error("Error al mostrar productos", error);
     }
+    console.timeEnd("Mostrar productos"); // Fin medición
 }
 
 // Llamar a la función para mostrar los productos al cargar la página
@@ -170,6 +172,7 @@ try {
 //Funcion para mostrar una vista ampliada con la informacion del producto
 function verImagenGrande(elemento) {
     try {
+        console.time("Vista grande"); // Inicio medición
         log("DEBUG","Cargar vista grande");
         // Se obtiene el contenedor de la vista grande y se verifica que exista
         var vistaGrandeProducto = document.getElementById("vista-grande");
@@ -226,6 +229,8 @@ function verImagenGrande(elemento) {
         log("DEBUG","Error al ver la vista grande, error");
         console.error("Error al ver la vista grande", error);
     }
+    console.timeEnd("Vista grande"); // Inicio medición
+
     
 }
 
@@ -259,6 +264,7 @@ function vistaGrande(event) {
 // Funcion para agregar los productos al carrito
 function agregarAlCarrito() {
     try {
+        console.time("Agregar al carrito"); // Inicio medición
         log("INFO","Agregando productos al carrito");
         if(!Array.isArray(carrito)){
             console.error("Error: carrito no es un arreglo");
@@ -301,11 +307,14 @@ function agregarAlCarrito() {
         log("ERROR: error a al agregar productos al carrito", error);
         console.error("Error: No se pudo agregar al carrito", error);
     }
+    console.timeEnd("Agregar al carrito"); // Inicio medición
+
 }
 
 //Funcion que actualiza los productos en el carrito con el total de la compra
 function actualizarCarrito() {
     try {
+        console.time("Actualizando carrito");
         log("DEBUG","Actualizando productos del carrito");
         const carritoLista = document.getElementById("carrito-lista");
         const totalElement = document.getElementById("total");
@@ -350,11 +359,13 @@ function actualizarCarrito() {
         log("ERROR","No se pudo actualzar el carrito");
         console.error("Error: Error al actualizar el carrito de compras");
     }
+    console.timeEnd("Actualizando carrito");
 }
 
 //Funcion que elimina un producto del carrito de acuerdo a su indice
 function eliminarProducto(index) {
     try {
+        console.time("Quitando productos");
         log("INFO","Quitado productos del carrito");
         //se verifica que el carrito sea un arreglo antes de operar sobr él
         if(!Array.isArray(carrito)){
@@ -370,12 +381,14 @@ function eliminarProducto(index) {
     } catch (error){
         console.error("Error: Error, no se pudo eliminar el producto");
     }
+    console.timeEnd("Quitando productos");
     
 }
 
 //Quita todos los productos que se encuentra en el carrito
 function vaciarCarrito() {
     try {
+        console.time("Vaciar carrito");
         log("DEBUG", "Vaciando el carrito");
         // verifica el carrito
         if(!Array.isArray(carrito)){
@@ -396,8 +409,7 @@ function vaciarCarrito() {
     } catch (error) {
         console.error("Error: error al vaciar el carrito", error);
     }
-    // carrito = [];
-    // actualizarCarrito();
+    console.timeEnd("Vaciar carrito");
 }
 
 //Permite visualizar el carrito de compras y cerrarlo
@@ -432,6 +444,7 @@ function cerrarCarrito() {
 // Función de búsqueda lineal para buscar un producto por nombre
 function buscarProducto(query) {
     try {
+        console.time("Buscando productos");
         log("DEBUG");
         //verifica que el parametro sea una cadena
         if (typeof query !== 'string') {
@@ -471,6 +484,7 @@ function buscarProducto(query) {
         log("ERROR", "Problemas al buscar el producto");
         console.error("Error durante la búsqueda de productos:", error);
     }
+    console.timeEnd("Buscando productos");
 }
 
 
@@ -490,6 +504,7 @@ document.getElementById('barra-busqueda').addEventListener('input', () => {
 //confirmar compra de productos
 function confirmarCompra() {
     try {
+        console.time("Confirmando compra");
         log("DEBUG");
         log("INFO", "Confirmando la compra");
         //En caso de que el carito no contenga productos mostrar un mensaje
@@ -512,6 +527,7 @@ function confirmarCompra() {
         log("ERROR", "No se pudo realizar la compra");
         console.error("ERROR: error al confirmar la compra", error);
     }
+    console.timeEnd("Confirmando compra");
 }
 
 
@@ -519,6 +535,7 @@ function confirmarCompra() {
 // Función para manejar la confirmación de compra
 document.getElementById('confirmar-pago').addEventListener('click', () => {
     try {
+        console.time("Confirmando pago");
         log("DEBUG");
         log("INFO", "Confirmando compra");
         const correo = document.getElementById('correo').value;
@@ -593,6 +610,7 @@ document.getElementById('confirmar-pago').addEventListener('click', () => {
         log("ERROR", "No se pudo confirmar la compra", error);
         console.error("ERROR: no se pudo confirmar el pago", error);
     }
+    console.timeEnd("Confirmando pago");
 });
     
 // Función de saneamiento para evitar inyecciones de HTML o JavaScript
@@ -646,6 +664,7 @@ function obtenerMetodoPago() {
 // Función para cerrar el ventana de pago
 function cerrarVentanaPago() {
     try {
+        console.time("Cerrando ventana pago");
         log("DEBUG");
         // Intentar obtener el elemento de la ventana de pago
         const ventanaPago = document.getElementById('ventana-pago');
@@ -663,15 +682,16 @@ function cerrarVentanaPago() {
         // Capturar errores inesperados y mostrarlos en la consola
         console.error("ERROR: error al cerrar la ventana de pago:", error);
     }
+    console.timeEnd("Cerrando ventana pago");
 }
 
 
 // Función para vaciar el carrito
-function vaciarCarrito() {
-    carrito = [];
-    total = 0;
-    actualizarCarrito();
-}
+// function vaciarCarrito() {
+//     carrito = [];
+//     total = 0;
+//     actualizarCarrito();
+// }
 
 // Función para obtener el método de pago (sin validación)
 // function obtenerMetodoPago() {
@@ -837,56 +857,68 @@ function verProducto(nombre) {
 // Funciones para mostrar productos
 function verSudaderas() {
     try {
+        console.time("Mostrando sudaderas");
         log("INFO", "mostrando sudaderas");
         verProducto('Sudadera');
     } catch (error) {
         console.error("ERROR: error al ver las sudaderas", error);
     }
+    console.timeEnd("Mostrando sudaderas");
 }
 
 function verShorts() {
     try {
+        console.time("Mostrando shorts");
         log("INFO", "Mostrando shorts");
         verProducto('Short');
     } catch (error) {
         console.error("ERROR: error al ver los shorts", error);
     }
+    console.timeEnd("Mostrando shorts");
 }
 
 function verChamarras() {
     try {
+        console.time("Mostrando chamarras");
         log("INFO", "Mostrando chamarras");
         verProducto('Chamarra');
     } catch(error) {
         console.error("ERROR: error al ver las chamarras", error);
     }
+    console.timeEnd("Mostrando chamarras");
 }
 
 function verPantalones() {
     try {
+        console.time("Mostrando pantalones");
         log("INFO" ,"MOstrando pantalones")
         verProducto('Pantalon');
     } catch(error) {
         console.error("ERROR: error al ver los pantalones", error);
     }
+    console.timeEnd("Mostrando pantalones");
 }
 
 function verCamisas() {
     try {
+        console.time("Mostrando camisas");
         log("INFO", "Mostrando camisas");
         verProducto('Camisa');
     } catch(error) {
         console.error("ERROR: error al ver las camisas", error);
     }
+    console.timeEnd("Mostrando camisas");
 }
 
 function verVestidos() {
     try {
+        console.time("Mostrando vestidos");
         log("INFO", "Mostrando vestidos")
         verProducto('Vestido');
     } catch(error) {
         console.error("ERROR: error al ver los vestidos", error);
     }
+    console.timeEnd("Mostrando vestidos");
 }
 
 /* 
@@ -895,6 +927,7 @@ function verVestidos() {
 */
 function volverArriba() {
     try {
+        console.time("Regresando arriba");
         log("DEBUG");
         log("INFO" ,"Volviendo a la parte superior de la aplicacion web");
         // Hace scroll hacia la parte superior 
@@ -903,6 +936,7 @@ function volverArriba() {
         log("WARNING");
         console.error("ERROR: error al intentar volver al inicio de la página:", error);
     }
+    console.timeEnd("Regresando arriba");
 }
 
 
