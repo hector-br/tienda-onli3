@@ -61,7 +61,13 @@ function log(level, message, data = null) {
         console.log(logMessage);
     }
 }
-
+// Función de timeout para evitar bloqueos en E/S
+function withTimeout(fn, timeoutMs, errorMsg) {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => reject(new Error(errorMsg)), timeoutMs);
+        fn().then(resolve).catch(reject);
+    });
+}
 
 // Validación: asegurar que 'productos' es un arreglo y contiene productos válidos
 if (!Array.isArray(productos)) {
@@ -107,52 +113,62 @@ if (!Array.isArray(productos)) {
 }
 
 // Función para mostrar los productos en el contenedor principal de los productos
-function mostrarProductos(productos) {
+async function mostrarProductos(productos) {
     try {
         console.time("Mostrar productos"); // Inicio medición
-        const contenedorProductos = document.getElementById('productos-container');
-        if(!contenedorProductos){
-            console.error("no se encontro el contenedor productos");
-            return; //Detiene la ejecucion 
-        }
-
-        // Se verifica que productos sea un array
-        if(!Array.isArray(productos)){
-            console.error("Prodcutos no es un array")
-            return; 
-        }
-        contenedorProductos.innerHTML = '';
-
-        productos.forEach(producto => {
-            try {
-                // Se valida los datos del producto antes de procesarlos
-                if(!producto || !producto.imagen || !producto.nombre || !producto.precio) {
-                    console.warn("Producto incompleto");
-                    return;
-                }
-
-                if(typeof producto.precio !== "number"){
-                    console.warn(`Error en el tipo de dato preio`, producto); 
-                    return;
-                }
-                const divProducto = document.createElement('div');
-                divProducto.classList.add('producto');
-
-                divProducto.innerHTML = `
-                    <img src="${producto.imagen}" alt="${producto.nombre}" class="imagen" onclick="verImagenGrande(this)" 
-                        data-img="${producto.imagen}" 
-                        data-description="${producto.descripcion}" 
-                        data-price="${producto.precio}" 
-                        data-size="${producto.talla}">
-                    <p>${producto.descripcion}</p>
-                    <p>$${producto.precio}</p>
-                `;
-                contenedorProductos.appendChild(divProducto);
-
-            } catch (error) {
-                console.error("Error en los productos", error);
+        // const contenedorProductos = document.getElementById('productos-container');
+        // if(!contenedorProductos){
+        //     console.error("no se encontro el contenedor productos");
+        //     return; //Detiene la ejecucion 
+        // }
+   
+        await withTimeout(() => new Promise((resolve) => {
+            const contenedorProductos = document.getElementById('productos-container');
+            if (!contenedorProductos) {
+                throw new Error("No se encontró el contenedor de productos.");
+                
             }
-        });
+            resolve(); // Se confirma que el contenedor existe.
+      
+
+            // Se verifica que productos sea un array
+            if(!Array.isArray(productos)){
+                console.error("Prodcutos no es un array")
+                return; 
+            }
+            
+            contenedorProductos.innerHTML = '';
+            productos.forEach(producto => {
+                try {
+                    // Se valida los datos del producto antes de procesarlos
+                    if(!producto || !producto.imagen || !producto.nombre || !producto.precio) {
+                        console.warn("Producto incompleto");
+                        return;
+                    }
+
+                    if(typeof producto.precio !== "number"){
+                        console.warn(`Error en el tipo de dato preio`, producto); 
+                        return;
+                    }
+                    const divProducto = document.createElement('div');
+                    divProducto.classList.add('producto');
+
+                    divProducto.innerHTML = `
+                        <img src="${producto.imagen}" alt="${producto.nombre}" class="imagen" onclick="verImagenGrande(this)" 
+                            data-img="${producto.imagen}" 
+                            data-description="${producto.descripcion}" 
+                            data-price="${producto.precio}" 
+                            data-size="${producto.talla}">
+                        <p>${producto.descripcion}</p>
+                        <p>$${producto.precio}</p>
+                    `;
+                    contenedorProductos.appendChild(divProducto);
+
+                } catch (error) {
+                    console.error("Error en los productos", error);
+                }
+            });
+        }), 4000, "Timeout: El contenedor de productos no está disponible");
     } catch (error) {
         console.error("Error al mostrar productos", error);
     }
